@@ -61,7 +61,7 @@ summary(insurance_t.complete$INAREA) - summary(insurance_t.missing$INAREA)
 summary(insurance_t.complete$MOVED) - summary(insurance_t.missing$MOVED)
 summary(insurance_t.complete$AGE) - summary(insurance_t.missing$AGE)
 View(table(insurance_t.complete$BRANCH))
-view(table(insurance_t.missing$BRANCH))
+View(table(insurance_t.missing$BRANCH))
 
 
 insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
