@@ -1,8 +1,8 @@
 
-install.packages("brglm") #necessary for bias reduction, penalized likelihood
+# install.packages("brglm") #necessary for bias reduction, penalized likelihood
 library(haven) #necessary for import of SAS
 library(tidyverse) # necessary for life in R
-library(brglm)
+# library(brglm)
 
 rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
 
@@ -15,7 +15,6 @@ getwd()
 file <- paste(sp_path, "\\insurance_t.sas7bdat",sep='')
 insurance_t <- read_sas(file)
 head(insurance_t)
-#View(insurance_t)
 str(insurance_t)
 
 # TODO set alpha, or ensure we know what alpha we're using
@@ -45,7 +44,8 @@ insurance.sel2 <- select(insurance_t,
                              CD, INV, IRA, CDBAL, 
                              MM, MTG, CC,
                             INS)
-#Filtering into two groups to possible identify
+
+#Filtering into two groups to possible identify source of missing
 insurance_t.missing <- insurance_t %>%
   mutate(missing_group = is.na(PHONE)) %>%
   filter(missing_group==TRUE)
@@ -54,16 +54,33 @@ insurance_t.complete <- insurance_t %>%
   mutate(missing_group = is.na(PHONE)) %>%
   filter(missing_group==FALSE)
 
+#comparing summaries of individual variables (large differences would indicate source of missing)
 summary(insurance_t.complete$ACCTAGE) - summary(insurance_t.missing$ACCTAGE)
 summary(insurance_t.complete$HMVAL) - summary(insurance_t.missing$HMVAL)
 summary(insurance_t.complete$LORES) - summary(insurance_t.missing$LORES)
 summary(insurance_t.complete$INAREA) - summary(insurance_t.missing$INAREA)
 summary(insurance_t.complete$MOVED) - summary(insurance_t.missing$MOVED)
 summary(insurance_t.complete$AGE) - summary(insurance_t.missing$AGE)
-View(table(insurance_t.complete$BRANCH))
-View(table(insurance_t.missing$BRANCH))
+table(insurance_t.complete$BRANCH)
+table(insurance_t.missing$BRANCH) #BRANCH matches the problem
 
+#missing value summary worthy of finalization
+insurance.branch <- insurance_t %>%
+  group_by(BRANCH) %>%
+  summarize(Count=n(),
+            PHONE.mean=mean(PHONE, na.rm=TRUE), 
+            PHONE.sum=sum(PHONE, na.rm=TRUE), 
+            PHONE.NA=sum(is.na(PHONE)),
+            CC.NA=sum(is.na(CC)),
+            CC.TRUE=sum(INV==1),
+            CC.FALSE=sum(INV==0),
+            INV.NA=sum(is.na(INV)),
+            INV.TRUE=sum(INV==1),
+            INV.FALSE=sum(INV==0)
+            )
+View(insurance.branch)
 
+# Cleaning datasets for easier use and comparison
 insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
 insurance.sel.na.omit <- na.omit(insurance.sel) #if we want datasets without 'missingness'
 
