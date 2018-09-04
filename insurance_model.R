@@ -39,6 +39,30 @@ insurance.sel <- select(insurance_t,
                              ILSBAL, MM, MTG, CC, SDB, 
                              INCOME, HMVAL, INAREA,
                            INS)
+insurance.sel2 <- select(insurance_t,
+                            DDA, DDABAL, 
+                             PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, 
+                             CD, INV, IRA, CDBAL, 
+                             MM, MTG, CC,
+                            INS)
+#Filtering into two groups to possible identify
+insurance_t.missing <- insurance_t %>%
+  mutate(missing_group = is.na(PHONE)) %>%
+  filter(missing_group==TRUE)
+
+insurance_t.complete <- insurance_t %>%
+  mutate(missing_group = is.na(PHONE)) %>%
+  filter(missing_group==FALSE)
+
+summary(insurance_t.complete$ACCTAGE) - summary(insurance_t.missing$ACCTAGE)
+summary(insurance_t.complete$HMVAL) - summary(insurance_t.missing$HMVAL)
+summary(insurance_t.complete$LORES) - summary(insurance_t.missing$LORES)
+summary(insurance_t.complete$INAREA) - summary(insurance_t.missing$INAREA)
+summary(insurance_t.complete$MOVED) - summary(insurance_t.missing$MOVED)
+summary(insurance_t.complete$AGE) - summary(insurance_t.missing$AGE)
+View(table(insurance_t.complete$BRANCH))
+view(table(insurance_t.missing$BRANCH))
+
 
 insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
 insurance.sel.na.omit <- na.omit(insurance.sel) #if we want datasets without 'missingness'
@@ -62,47 +86,5 @@ fit2 <- glm(INS ~ DDA + DDABAL +
 summary(fit2)
 
 
-#Iteration 3: step-wise from all_recommended
-#will get warnings 'fitted probabilities numerically 0 or 1 occurred' (linearly separated?) 
-fit3 <- glm(INS ~ DDA + DDABAL + 
-              NSFAMT	+ PHONE	+ TELLER +	SAV +	SAVBAL + ATMAMT + POSAMT +
-              CD + INV + IRA + CDBAL + IRABAL+
-              ILSBAL + MM + MTG + CC + SDB + 
-              INCOME + HMVAL + INAREA, 
-            data = insurance.sel.na.omit, family = binomial(link = "logit"))
-model.null = glm(INS ~ 1, 
-                 data=insurance.sel.na.omit,
-                 family = binomial(link="logit")
-)
-
-step(model.null,
-     scope = list(upper=fit3),
-     direction="both",
-     test="Chisq",
-     data=Data)
-
-summary(fit3)
-
-#Iteration 4:  brglm() instead of glm() but still has same warnings
-fit4 <- brglm(INS ~ DDA + DDABAL + 
-              NSFAMT	+ PHONE	+ TELLER +	SAV +	SAVBAL + ATMAMT + POSAMT +
-              CD + INV + IRA + CDBAL + IRABAL+
-              ILSBAL + MM + MTG + CC + SDB + 
-              INCOME + HMVAL + INAREA, 
-            data = insurance.sel.na.omit, family = binomial(link = "logit"))
-model.null = glm(INS ~ 1, 
-                 data=insurance.sel.na.omit,
-                 family = binomial(link="logit")
-)
-
-step(model.null,
-     scope = list(upper=fit4),
-     direction="both",
-     test="Chisq",
-     data=insurance.sel.na.omit)
-
-summary(fit3)
-
 # ANOVA of all models generated
-anova(fit2, test = "LRT")
-anova(fit3, fit4, test = "LRT")
+#anova(fit2, test = "LRT")
