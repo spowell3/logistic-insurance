@@ -9,13 +9,16 @@ rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
 # import the file
 # PLEASE just add a new variable for your file path
 sp_path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\data\\Logistic Data"
+sp_savepath <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance"
 gf_path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data"
-setwd(file.path(sp_path))
-getwd()
-file <- paste(sp_path, "\\insurance_t.sas7bdat",sep='')
+
+path <- sp_path #CHANGE THIS TO YOURS
+
+setwd(file.path(path))
+file <- paste(path, "\\insurance_t.sas7bdat",sep='')
 insurance_t <- read_sas(file)
-head(insurance_t)
-str(insurance_t)
+#head(insurance_t)
+#str(insurance_t)
 
 # TODO set alpha, or ensure we know what alpha we're using
 
@@ -78,7 +81,7 @@ insurance.branch <- insurance_t %>%
             INV.TRUE=sum(INV==1),
             INV.FALSE=sum(INV==0)
             )
-View(insurance.branch)
+write.csv(insurance.branch, file="insurance_branch.csv")
 
 # Cleaning datasets for easier use and comparison
 insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
@@ -94,7 +97,7 @@ fit1 <- glm(INS ~ DDA + DDABAL +
             data = insurance.sel, family = binomial(link = "logit"))
 summary(fit1)
 
-#Iteration 2: manual reduction of variables
+#ITERATION 2: manual reduction of variables
 fit2 <- glm(INS ~ DDA + DDABAL + 
               PHONE	+ TELLER +	SAV +	SAVBAL + ATMAMT + 
               CD + INV + IRA + CDBAL + 
@@ -102,6 +105,5 @@ fit2 <- glm(INS ~ DDA + DDABAL +
             data = insurance.sel, family = binomial(link = "logit"))
 summary(fit2)
 
-
-# ANOVA of all models generated
-#anova(fit2, test = "LRT")
+setwd("C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance")
+save(fit2, insurance_t, file="LogisticsHW1.RData")
