@@ -142,6 +142,7 @@ abline(a = 0, b = 1, lty = 2)
 auc <- performance(pred, measure = "auc")@y.values
 auc
 c.stat # Equals c.stat. YAY!
+help(performance)
 
 ### classification table ###
 classif_table <- data.frame(threshold = perf@alpha.values[[1]],
@@ -162,7 +163,7 @@ classif_table$youdenJ <- with(classif_table, (2*(wt*tpr + (1-wt)*tnr) - 1))
 classif_table[which.max(classif_table$youdenJ),]
 max.tpr <- classif_table[which.max(classif_table$youdenJ),]$tpr
 max.tnr <- classif_table[which.max(classif_table$youdenJ),]$tnr
-
+classif_table
 # TODO does wt = threshold? If so, why not pick by threshold? In not, what is threshold?
 with(classif_table, plot(threshold, youdenJ)) 
 
