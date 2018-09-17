@@ -1,20 +1,187 @@
 
 
 library(haven) #necessary for import of SAS
+library(Hmisc) # for rcorr.cens()
+library(ROCR) # necessary for performance() func
 library(tidyverse) # necessary for life in R
+
 # library(brglm)
 
 rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
 
-sp_path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\LogisticsHW1.RData"
-gf_path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data"
-wj_path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
-gw_path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
-mr_path <- "C:\\Users\\molly\\"
+path <- getwd()
 
-load(sp_path)
+# IF YOU ARE USING R STUDIO, SKIP THESE AND USE THE AUTOMATED HOTNESS BELOW
+# If you aren't using R Studio, chose your path wisely...
+# path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\"
+# path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data\\"
+# path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
+# path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
+# path <- "C:\\Users\\molly\\folderino7000\\"
+
+path <- dirname(rstudioapi::getActiveDocumentContext()$path) #AUTOMATED HOTNESS
+setwd(path)
+load("LogisticsHW1.RData")
 
 ############################################
-#################  Results  ################
+############   DIAGNOSTICS  ################
+############################################
+
+
+
+
+
+#DECISION OF THE FINAL MODEL
+final.model <- fit2
+
+############################################
+############   ASSESSMENT  #################
 ############################################
 #By S.Powell
+
+# SCORING
+scores <- predict(final.model, newdata = insurance_v, type = "response") 
+summary(scores)
+
+# COEFFICIENT OF DISCRIMINATION
+D <- mean(scores[insurance_v$INS == 1], na.rm = TRUE) - mean(scores[insurance_v$INS == 0], na.rm = TRUE)
+D <- round(D, 5) #rounding for plot labelling later
+
+# PLOT OF DISCRIMINATION
+df <- data.frame(INS = insurance_v$INS,
+                 phat = scores)
+ggplot(df, aes(phat, fill = factor(INS))) +
+  geom_density(alpha = 0.2) +
+  labs(title="Density Plot of Predicted Probabilities",
+       subtitle=paste("Coef. of Discrimination = ",D,sep=""),
+       x = "Predicted Probability",
+       y= "Density",
+       fill = "INS") +
+  theme_minimal()
+# Not great discrimination, could be better, obv
+
+# c-STATISTIC
+plot(scores, insurance_v$INS)
+c.stat <- rcorr.cens(scores, insurance_v$INS)[1]
+c.stat #0.761637
+
+# BRIER SCORE
+### Brier score function ###
+brier_score <- function(obj, new_x = NULL, new_y = NULL){
+  # computes [scaled] brier score
+  #
+  # inputs:
+  # 1. obj: either a model from glm() or a data frame.
+  #         the data frame must have a vector responses "y" and a vector of
+  #         either probabilities "p" or linear predictor "lp".
+  # 2. new_x: specify new dataset to get predicted probabilities for new obs.
+  #             if NULL, the estimated probabilities from original obs will
+  #             be used.
+  # 3. new_y: use new responses. if NULL, original ones will be used.
+  #
+  # output:
+  #   brier score, scaled brier score
+  
+  if(is.null(new_y)){
+    y <- obj$y
+  } else {
+    y <- new_y
+  }
+  
+  p_obs <- mean(y)
+  
+  if(any(class(obj) == "glm")){
+    if(is.null(new_x)){
+      p <- predict(obj, newdata = new_x, type = "response")
+      lp <- predict(obj, newdata = new_x, type = "link")
+    } else {
+      lp <- obj$linear
+      p <- fitted(obj)
+    }
+  } else if(is.null(obj$p)) {
+    lp <- obj$lp
+    p <- fitted(obj)
+  } else {
+    p <- obj$p
+    lp <- obj$linear
+  }
+  
+  # brier score
+  brier_score <- mean((y - p)^2)
+  
+  # max brier score is just the observed proportion
+  brier_max <- p_obs*((1 - p_obs)^2) + (1 - p_obs)*(p_obs^2)
+  
+  # scaled brier score
+  # ranges from 0 to 1---lower is better
+  brier_scaled <- brier_score/brier_max
+  # essentially, 1 - brier_scaled is the %improvement over null model
+  
+  res <- data.frame(brier_score = brier_score,
+                    brier_max = brier_max,
+                    brier_scaled = brier_scaled)
+  res
+}
+
+brier_score <- brier_score(final.model, new_x=insurance_v, new_y = insurance_t$INS)
+brier_score # TODO Are these reasonable results?
+
+### ROC CURVES ###
+# actual outcomes must be a factor (b/c considered classification?)
+pred <- prediction(scores, factor(insurance_v$INS))
+
+# then in performance, "measure" is the y-axis, and "x.measure" is the x-axis
+# for a roc curve, we want tpr vs. fpr. ("sens" and "spec" also work)
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+
+# Plot of ROC and 45-degree line to reference random guessing
+plot(perf, colorize = TRUE)
+abline(a = 0, b = 1, lty = 2)
+
+# AUC
+auc <- performance(pred, measure = "auc")@y.values
+auc
+c.stat # Equals c.stat. YAY!
+
+### classification table ###
+classif_table <- data.frame(threshold = perf@alpha.values[[1]],
+                            tpr = perf@y.values[[1]],
+                            tnr = 1 - perf@x.values[[1]],
+                            fpr = perf@x.values[[1]])
+colnames(classif_table) <- c("Threshold", "True Positive Rate", "True Negative Rate", "False Positive Rate")
+
+# YOUDEN'S INDEX: 
+# added hypothetical weights for tpr (sens) and tnr (spec), but not req'd in HW
+false.neg.cost <- (-20) # cost of false neg: $25 of potential profit not realized 
+false.pos.cost <- (-5)  # cost of false pos: $5 of marketing cost wasted
+wt <- 0.8 # Need to confirm math of wt...
+# TODO Check with Matt how hypothetical marketing.cost and ins.profit might affect wt calc
+classif_table$youdenJ <- with(classif_table, (2*(wt*tpr + (1-wt)*tnr) - 1))
+
+# find row with max
+classif_table[which.max(classif_table$youdenJ),]
+max.tpr <- classif_table[which.max(classif_table$youdenJ),]$tpr
+max.tnr <- classif_table[which.max(classif_table$youdenJ),]$tnr
+
+# TODO does wt = threshold? If so, why not pick by threshold? In not, what is threshold?
+with(classif_table, plot(threshold, youdenJ)) 
+
+# MEDIOCRE ROC PLOT
+# plot(perf, colorize = TRUE)
+# abline(a = 0, b = 1, lty = 2)
+# points((1-max.tnr), max.tpr, type = "p", cex=1.5, col = "red", lwd = 2)
+# title("ROC Curve of Validation Data")
+# legend("bottomright", inset = 0.03, type(), col = c("grey","red"),
+#        legend = c("Random guessing", "Ideal with assumed costs"),
+#        lty = c(2,NA), pch= c(NA, 1), lwd = c(1,2))
+
+# FINAL ROC PLOT w/ ideal threshold
+ggplot(classif_table)+
+  geom_line(aes(x=fpr, y=tpr, color=threshold), size=2) +
+  scale_color_gradient(low="green", high="red") +
+  labs(x="False Positive Rate", y= "False Negative Rate", color="alpha",
+       title="ROC Curve of Validation Data") +
+  geom_point(x= (1-max.tnr), y= max.tpr, size=3, shape=17)+
+  geom_text(x= -.03+(1-max.tnr), y= max.tpr, hjust=1, vjust=0, label="Ideal for \nassumed costs")+
+  theme_minimal()
+

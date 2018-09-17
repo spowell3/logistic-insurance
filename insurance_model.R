@@ -17,6 +17,9 @@ path <- sp_path #CHANGE THIS TO YOURS
 setwd(file.path(path))
 file <- paste(path, "\\insurance_t.sas7bdat",sep='')
 insurance_t <- read_sas(file)
+file <- paste(path, "\\insurance_v.sas7bdat",sep='')
+insurance_v <- read_sas(file)
+
 #head(insurance_t)
 #str(insurance_t)
 
@@ -81,7 +84,7 @@ insurance.branch <- insurance_t %>%
             INV.TRUE=sum(INV==1),
             INV.FALSE=sum(INV==0)
             )
-write.csv(insurance.branch, file="insurance_branch.csv")
+#write.csv(insurance.branch, file="insurance_branch.csv")
 
 # Cleaning datasets for easier use and comparison
 insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
@@ -106,4 +109,4 @@ fit2 <- glm(INS ~ DDA + DDABAL +
 summary(fit2)
 
 setwd("C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance")
-save(fit2, insurance_t, file="LogisticsHW1.RData")
+save(fit2, insurance_t, insurance_v, file="LogisticsHW1.RData")
