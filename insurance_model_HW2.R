@@ -51,6 +51,35 @@ summary(fit3)    ## AIC 8297.2  --> performs marginally better
 
 
 
+
+
+
+########## Partial Residuals Plot ###########
+
+visreg(fit2, "Number_of_Competitor_Bids", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot for Number of Competitor Bids",
+       x = "some variable", y = "partial (deviance) residuals")
+
+########## DF Beats Code ###########
+
+dfbetasPlots(fit1, terms = "comp.count", id.n = 5,
+             col = ifelse(fit1$y == 1, "red", "blue"))
+
+
+########## Getting Separation and Cooks D ############
+
+separation.detection(fit)
+
+influence.measures(fit)
+
+### plot Cook's distance
+plot(fit2, 4, n.id = 5) # n.id = #points identified on the plot
+
+
+##########################################################
+
+
 #DECISION OF THE FINAL MODEL
 final.model <- fit2
 
