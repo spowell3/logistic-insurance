@@ -26,8 +26,28 @@ load("LogisticsHW1.RData")
 ############################################
 ############   DIAGNOSTICS  ################
 ############################################
+# By B.Jenista
+summary(fit2)   ## AIC 8331.9
 
+insurance.sel <- select(insurance_t,
+                        DDA, DDABAL, 
+                        NSFAMT, PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, POSAMT,
+                        CD, INV, IRA, CDBAL, IRABAL,
+                        ILSBAL, MM, MTG, CC, SDB, 
+                        INCOME, HMVAL, INAREA,
+                        INS)
 
+## testing various interaction terms
+fit3 <- glm(INS ~ DDA + DDABAL + 
+              PHONE	+ TELLER + DDA*(SAV + SAVBAL) + ATMAMT + 
+              CD + INV + CD*IRA + CDBAL + 
+              CD*MM + MTG + CC, 
+            data = insurance.sel, family = binomial(link = "logit"))
+summary(fit3)    ## AIC 8297.2  --> performs marginally better
+
+## Note: from the previous homework, the fit1 model had an AIC of 6712.2 (which is significantly better than either model here)
+## What level of effort do we want to go into to find the best model?
+## End Bill's code
 
 
 
