@@ -1,10 +1,11 @@
 
-
 library(haven) #necessary for import of SAS
 library(Hmisc) # for rcorr.cens()
 library(ROCR) # necessary for performance() func
 library(tidyverse) # necessary for life in R
 
+
+install.packages("Hmisc")
 # library(brglm)
 
 rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
@@ -16,7 +17,7 @@ path <- getwd()
 # path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\"
 # path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data\\"
 # path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
-# path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
+path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
 # path <- "C:\\Users\\molly\\folderino7000\\"
 
 path <- dirname(rstudioapi::getActiveDocumentContext()$path) #AUTOMATED HOTNESS
@@ -49,33 +50,63 @@ summary(fit3)    ## AIC 8297.2  --> performs marginally better
 ## What level of effort do we want to go into to find the best model?
 ## End Bill's code
 
+#######################################################################
+######### Partial Residuals Plots for Continuous Variables ############
 
-
-
-
-
-########## Partial Residuals Plot ###########
-
-visreg(fit2, "Number_of_Competitor_Bids", gg = TRUE, points = list(col = "black")) +
+visreg(fit2, "DDABAL", gg = TRUE, points = list(col = "black")) +
   geom_smooth(col = "red", fill = "red") + theme_bw() +
-  labs(title = "Partial Residual Plot for Number of Competitor Bids",
-       x = "some variable", y = "partial (deviance) residuals")
+  labs(title = "Partial Residual Plot of DDABAL",
+       x = "DDABAL", y = "partial (deviance) residuals")
 
+visreg(fit2, "SAVBAL", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot of SAVBAL",
+       x = "SAVBAL", y = "partial (deviance) residuals")
+
+###### This plot is showing that SAVBAL may be be linear #######
+
+visreg(fit2, "CDBAL", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot of CDBAL",
+       x = "CDBAL", y = "partial (deviance) residuals")
+
+visreg(fit2, "ATMAMT", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot of ATMAMT",
+       x = "ATMAMT", y = "partial (deviance) residuals")
+
+####### This plot is showing that ATMAMT may not be linear #########
+
+visreg(fit2, "TELLER", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot of TELLER",
+       x = "TELLER", y = "partial (deviance) residuals")
+
+visreg(fit2, "PHONE", gg = TRUE, points = list(col = "black")) +
+  geom_smooth(col = "red", fill = "red") + theme_bw() +
+  labs(title = "Partial Residual Plot of PHONE",
+       x = "PHONE", y = "partial (deviance) residuals")
+
+####################################
 ########## DF Beats Code ###########
 
-dfbetasPlots(fit1, terms = "comp.count", id.n = 5,
-             col = ifelse(fit1$y == 1, "red", "blue"))
+influence.measures(fit2)
 
+dfbetasPlots(fit2, id.n = 5,
+             col = ifelse(fit2$y == 1, "red", "blue"))
 
+######################################################
 ########## Getting Separation and Cooks D ############
+library("brglm")
+separation.detection(fit2)
 
-separation.detection(fit)
+### Based on the function there is no separation between our data #####
 
-influence.measures(fit)
 
 ### plot Cook's distance
-plot(fit2, 4, n.id = 5) # n.id = #points identified on the plot
+plot(fit2, 4, n.id = 5) 
 
+#### the top most influential points from our model are 1547, 1721, 406
 
 ##########################################################
 
