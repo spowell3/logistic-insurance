@@ -53,6 +53,9 @@ summary(fit3)    ## AIC 8297.2  --> performs marginally better
 #######################################################################
 ######### Partial Residuals Plots for Continuous Variables ############
 
+
+####### Gavin Code ############
+
 visreg(fit2, "DDABAL", gg = TRUE, points = list(col = "black")) +
   geom_smooth(col = "red", fill = "red") + theme_bw() +
   labs(title = "Partial Residual Plot of DDABAL",
@@ -108,10 +111,14 @@ plot(fit2, 4, n.id = 5)
 
 #### the top most influential points from our model are 1547, 1721, 406
 
-##########################################################
+######### End Gavin Code #############
 
 
-#DECISION OF THE FINAL MODEL
+### Even thought fit 3 has a lower AIC, it was not drastically better than fit 2.  Including the interaction did not imporve the AIC that much, so to keep simplicity
+### I would say that we continue to run with fit 2.
+
+####### DECISION OF THE FINAL MODEL #########
+
 final.model <- fit2
 
 ############################################
