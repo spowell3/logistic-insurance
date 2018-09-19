@@ -3,6 +3,7 @@ library(haven) #necessary for import of SAS
 library(Hmisc) # for rcorr.cens()
 library(ROCR) # necessary for performance() func
 library(tidyverse) # necessary for life in R
+library(DescTools)
 
 
 install.packages("Hmisc")
@@ -111,11 +112,18 @@ plot(fit2, 4, n.id = 5)
 
 #### the top most influential points from our model are 1547, 1721, 406
 
-######### End Gavin Code #############
+PseudoR2(fit2, which = c("Cox", "Nagelkerke", "McFadden"))
+PseudoR2(fit3, which = c("Cox", "Nagelkerke", "McFadden"))
 
+AIC(fit2, fit3)
+BIC(fit2, fit3)
 
-### Even thought fit 3 has a lower AIC, it was not drastically better than fit 2.  Including the interaction did not imporve the AIC that much, so to keep simplicity
+summary(fit2)
+
+### Even thought fit 3 has a lower AIC and BIC, it was not drastically better than fit 2.  Including the interaction did not imporve the AIC that much, so to keep simplicity
 ### I would say that we continue to run with fit 2.
+
+######### End Gavin Code #############
 
 ####### DECISION OF THE FINAL MODEL #########
 
