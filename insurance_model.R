@@ -9,8 +9,8 @@ rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
 # import the file
 # PLEASE just add a new variable for your file path
 sp_path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\data\\Logistic Data"
-sp_savepath <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance"
-gf_path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data"
+#sp_savepath <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance"
+#gf_path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data"
 
 path <- sp_path #CHANGE THIS TO YOURS
 
@@ -25,11 +25,9 @@ insurance_v <- read_sas(file)
 
 # TODO set alpha, or ensure we know what alpha we're using
 
-#quick fit of Powell variables
-fit_sp <- glm(INS ~ 
-                INCOME + HMOWN + LORES + HMVAL + AGE + CRSCORE + MOVED + INAREA + RES,
-              data = insurance_t, family = binomial(link = "logit"))
-summary(fit_sp)
+#################################################
+##########         CLEANING           ###########
+#################################################
 
 # RECOMMENDED VARS
 #WJ 1-9 recommended vars : DDA + DDABAL
@@ -37,19 +35,30 @@ summary(fit_sp)
 #GF 19-27 recommended vars : CD + INV + IRA + CDBAL + IRABAL
 #GW 28-38 recommended vars : ILSBAL + MM + MTG + CC + SDB
 #SP 38-47 almost all vars : INCOME + HMOWN + LORES + HMVAL + AGE + CRSCORE + MOVED + INAREA + INS + BRANCH + RES
-insurance.sel <- select(insurance_t,
-                             DDA, DDABAL, 
-                             NSFAMT, PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, POSAMT,
-                             CD, INV, IRA, CDBAL, IRABAL,
-                             ILSBAL, MM, MTG, CC, SDB, 
-                             INCOME, HMVAL, INAREA,
-                           INS)
-insurance.sel2 <- select(insurance_t,
-                            DDA, DDABAL, 
-                             PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, 
-                             CD, INV, IRA, CDBAL, 
-                             MM, MTG, CC,
-                            INS)
+insurance.sel <- insurance_t %>%
+  select(
+    DDA, DDABAL, 
+    NSFAMT, PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, POSAMT,
+    CD, INV, IRA, CDBAL, IRABAL,
+    ILSBAL, MM, MTG, CC, SDB, 
+    INCOME, HMVAL, INAREA,
+    INS)
+insurance.sel2 <- insurance_t %>%
+  select(
+    DDA, DDABAL, 
+    PHONE, TELLER,	SAV,	SAVBAL, ATMAMT, 
+    CD, INV, IRA, CDBAL, 
+    MM, MTG, CC,
+    INS)
+
+# Cleaning datasets for easier use and comparison
+insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
+insurance.sel.na.omit <- na.omit(insurance.sel) #USE THIS ONE
+insurance.sel2.na.omit <- na.omit(insurance.sel2) 
+
+#################################################
+######### MISSING VALUE INVESTIGATION ###########
+#################################################
 
 #Filtering into two groups to possible identify source of missing
 insurance_t.missing <- insurance_t %>%
@@ -86,9 +95,9 @@ insurance.branch <- insurance_t %>%
             )
 #write.csv(insurance.branch, file="insurance_branch.csv")
 
-# Cleaning datasets for easier use and comparison
-insurance.na.omit <- na.omit(insurance_t) #if we want datasets without 'missingness'
-insurance.sel.na.omit <- na.omit(insurance.sel) #if we want datasets without 'missingness'
+#################################################
+############### MODEL BUILDING ##################
+#################################################
 
 # ITERATION 1
 #Building model from all variables that were recommended from data-exploration
@@ -97,7 +106,7 @@ fit1 <- glm(INS ~ DDA + DDABAL +
               CD + INV + IRA + CDBAL + IRABAL+
               ILSBAL + MM + MTG + CC + SDB + 
             INCOME + HMVAL + INAREA,
-            data = insurance.sel, family = binomial(link = "logit"))
+            data = insurance.sel.na.omit, family = binomial(link = "logit"))
 summary(fit1)
 
 #ITERATION 2: manual reduction of variables
@@ -105,8 +114,11 @@ fit2 <- glm(INS ~ DDA + DDABAL +
               PHONE	+ TELLER +	SAV +	SAVBAL + ATMAMT + 
               CD + INV + IRA + CDBAL + 
               MM + MTG + CC, 
-            data = insurance.sel, family = binomial(link = "logit"))
+            data = insurance.sel.na.omit, family = binomial(link = "logit"))
 summary(fit2)
 
+# LRT
+
+
 setwd("C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance")
-save(fit2, insurance_t, insurance_v, file="LogisticsHW1.RData")
+#save(fit2, insurance_t, insurance_v, file="LogisticsHW1.RData")

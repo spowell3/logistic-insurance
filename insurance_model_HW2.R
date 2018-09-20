@@ -4,9 +4,10 @@ library(Hmisc) # for rcorr.cens()
 library(ROCR) # necessary for performance() func
 library(tidyverse) # necessary for life in R
 library(DescTools)
+library(visreg) #necessary for visreg()
+library(car) #necessary for dfbetasPlots func
 
-
-install.packages("Hmisc")
+#install.packages("Hmisc")
 # library(brglm)
 
 rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
@@ -18,7 +19,7 @@ path <- getwd()
 # path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\"
 # path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data\\"
 # path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
-path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
+#path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
 # path <- "C:\\Users\\molly\\folderino7000\\"
 
 path <- dirname(rstudioapi::getActiveDocumentContext()$path) #AUTOMATED HOTNESS
@@ -91,18 +92,33 @@ visreg(fit2, "PHONE", gg = TRUE, points = list(col = "black")) +
   labs(title = "Partial Residual Plot of PHONE",
        x = "PHONE", y = "partial (deviance) residuals")
 
+# Alternative Plot Method that is more appropriate for reports
+# Mainly wanted Coloring of 1s and 0s, beter axes and better labels
+
+options(scipen=10000) # Sets higher penatly for scientific notation on plots. Only need to do this once before plotting.
+
+visreg(fit2, "DDABAL", gg = TRUE) +
+  geom_point(aes(color=as.factor(fit2$y))) +
+  geom_smooth(col = "red", fill = "red") +
+  labs(title = "Partial Residual Plot of DDABAL",
+       x = "Checking Account Balance, DDABAL ($)", y = "Partial (Deviance) Residuals",
+       color="Product \nPurchased\n(INS)")
+
+options(scipen=0) #resetting scipen option. Can do this at the end of all plots with scientific notation 
+
 ####################################
 ########## DF Beats Code ###########
 
-influence.measures(fit2)
+influence.measures(fit2) # What was found from this? Did we plot it?
 
 dfbetasPlots(fit2, id.n = 5,
              col = ifelse(fit2$y == 1, "red", "blue"))
+# anything noteworthy 
 
 ######################################################
 ########## Getting Separation and Cooks D ############
 library("brglm")
-separation.detection(fit2)
+qplot(separation.detection(fit2))
 
 ### Based on the function there is no separation between our data #####
 
@@ -141,6 +157,7 @@ summary(scores)
 # COEFFICIENT OF DISCRIMINATION
 D <- mean(scores[insurance_v$INS == 1], na.rm = TRUE) - mean(scores[insurance_v$INS == 0], na.rm = TRUE)
 D <- round(D, 5) #rounding for plot labelling later
+D
 
 # PLOT OF DISCRIMINATION
 df <- data.frame(INS = insurance_v$INS,
@@ -151,7 +168,7 @@ ggplot(df, aes(phat, fill = factor(INS))) +
        subtitle=paste("Coef. of Discrimination = ",D,sep=""),
        x = "Predicted Probability",
        y= "Density",
-       fill = "INS") +
+       fill = "Product \nPurchased\n(INS)") +
   theme_minimal()
 # Not great discrimination, could be better, obv
 
@@ -219,7 +236,7 @@ brier_score <- function(obj, new_x = NULL, new_y = NULL){
 }
 
 brier_score <- brier_score(final.model, new_x=insurance_v, new_y = insurance_t$INS)
-brier_score # TODO Are these reasonable results?
+brier_score
 
 ### ROC CURVES ###
 # actual outcomes must be a factor (b/c considered classification?)
@@ -244,7 +261,9 @@ classif_table <- data.frame(threshold = perf@alpha.values[[1]],
                             tpr = perf@y.values[[1]],
                             tnr = 1 - perf@x.values[[1]],
                             fpr = perf@x.values[[1]])
-colnames(classif_table) <- c("Threshold", "True Positive Rate", "True Negative Rate", "False Positive Rate")
+# TODO I want to simplify this from something of 2,000 values to something of 50-100 values for the report. But whatever
+
+#colnames(classif_table) <- c("Threshold", "True Positive Rate", "True Negative Rate", "False Positive Rate")
 
 # YOUDEN'S INDEX: 
 # added hypothetical weights for tpr (sens) and tnr (spec), but not req'd in HW
@@ -258,8 +277,6 @@ classif_table$youdenJ <- with(classif_table, (2*(wt*tpr + (1-wt)*tnr) - 1))
 classif_table[which.max(classif_table$youdenJ),]
 max.tpr <- classif_table[which.max(classif_table$youdenJ),]$tpr
 max.tnr <- classif_table[which.max(classif_table$youdenJ),]$tnr
-classif_table
-# TODO does wt = threshold? If so, why not pick by threshold? In not, what is threshold?
 with(classif_table, plot(threshold, youdenJ)) 
 
 # MEDIOCRE ROC PLOT
@@ -272,12 +289,12 @@ with(classif_table, plot(threshold, youdenJ))
 #        lty = c(2,NA), pch= c(NA, 1), lwd = c(1,2))
 
 # FINAL ROC PLOT w/ ideal threshold
-ggplot(classif_table)+
+ggplot(classif_table) +
   geom_line(aes(x=fpr, y=tpr, color=threshold), size=2) +
   scale_color_gradient(low="green", high="red") +
   labs(x="False Positive Rate", y= "False Negative Rate", color="alpha",
        title="ROC Curve of Validation Data") +
   geom_point(x= (1-max.tnr), y= max.tpr, size=3, shape=17)+
-  geom_text(x= -.03+(1-max.tnr), y= max.tpr, hjust=1, vjust=0, label="Ideal for \nassumed costs")+
+  geom_text(x= .03+(1-max.tnr), y= max.tpr, hjust=0, vjust=1, label="Ideal threshold for \nassumed costs")+
   theme_minimal()
 
