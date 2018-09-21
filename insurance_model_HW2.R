@@ -154,6 +154,11 @@ final.model <- fit2
 scores <- predict(final.model, newdata = insurance_v, type = "response") 
 summary(scores)
 
+#Brier score
+insurance_scores <- cbind(scores, insurance_v)
+brier_score1 <- mean((insurance_scores$INS - insurance_scores$scores)^2, na.rm=TRUE)
+brier_score1
+
 # COEFFICIENT OF DISCRIMINATION
 D <- mean(scores[insurance_v$INS == 1], na.rm = TRUE) - mean(scores[insurance_v$INS == 0], na.rm = TRUE)
 D <- round(D, 5) #rounding for plot labelling later
@@ -235,8 +240,9 @@ brier_score <- function(obj, new_x = NULL, new_y = NULL){
   res
 }
 
-brier_score <- brier_score(final.model, new_x=insurance_v, new_y = insurance_t$INS)
-brier_score
+brier_score_garbage <- brier_score(final.model, new_x=insurance_v, new_y = insurance_v$INS)
+brier_score_garbage #Do not trust this number. it says that we did worse than randome guessing,
+brier_score1 #is more reliable
 
 ### ROC CURVES ###
 # actual outcomes must be a factor (b/c considered classification?)
