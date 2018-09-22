@@ -114,11 +114,11 @@ fit2 <- glm(INS ~ DDA + DDABAL +
               PHONE	+ TELLER +	SAV +	SAVBAL + ATMAMT + 
               CD + INV + IRA + CDBAL + 
               MM + MTG + CC, 
-            data = insurance.sel.na.omit, family = binomial(link = "logit"))
+            data = insurance_t, family = binomial(link = "logit"))
 summary(fit2)
 
 # LRT
 
 
 setwd("C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance")
-#save(fit2, insurance_t, insurance_v, file="LogisticsHW1.RData")
+save(fit2, insurance_t, insurance_v, file="LogisticsHW1.RData")

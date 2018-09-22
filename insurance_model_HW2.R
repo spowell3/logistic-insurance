@@ -1,3 +1,7 @@
+# Logistic HW2
+# Team Orange Team 7
+# Powell, Fleming, Jenista, Rubin, Wilson
+
 
 library(haven) #necessary for import of SAS
 library(Hmisc) # for rcorr.cens()
@@ -10,21 +14,21 @@ library(car) #necessary for dfbetasPlots func
 #install.packages("Hmisc")
 # library(brglm)
 
-rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
-
-path <- getwd()
-
-# IF YOU ARE USING R STUDIO, SKIP THESE AND USE THE AUTOMATED HOTNESS BELOW
-# If you aren't using R Studio, chose your path wisely...
-# path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\"
-# path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data\\"
-# path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
-#path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
-# path <- "C:\\Users\\molly\\folderino7000\\"
-
-path <- dirname(rstudioapi::getActiveDocumentContext()$path) #AUTOMATED HOTNESS
-setwd(path)
-load("LogisticsHW1.RData")
+# rm(list=ls()) # for cleaning global environment, to guarantee a clean slate
+# 
+# path <- getwd()
+# 
+# # IF YOU ARE USING R STUDIO, SKIP THESE AND USE THE AUTOMATED HOTNESS BELOW
+# # If you aren't using R Studio, chose your path wisely...
+# # path <- "C:\\Users\\Steven\\Documents\\MSA\\Analytics Foundations\\lab and hw\\Logistic\\logistic-insurance\\"
+# # path <- "C:\\Users\\Grant\\Downloads\\MSA2019LogisticData\\data\\"
+# # path <- "C:\\Users\\Bill\\Documents\\NCSU\\Course Work\\Fall\\Logistic Regression\\Final Project\\"
+# #path <- "C:\\Users\\gavin\\Desktop\\Logisitic_Regression_Data\\"
+# # path <- "C:\\Users\\molly\\folderino7000\\"
+# 
+# path <- dirname(rstudioapi::getActiveDocumentContext()$path) #AUTOMATED HOTNESS
+# setwd(path)
+# load("LogisticsHW1.RData")
 
 ############################################
 ############   DIAGNOSTICS  ################
@@ -118,7 +122,7 @@ dfbetasPlots(fit2, id.n = 5,
 ######################################################
 ########## Getting Separation and Cooks D ############
 library("brglm")
-qplot(separation.detection(fit2))
+separation.detection(fit2)
 
 ### Based on the function there is no separation between our data #####
 
